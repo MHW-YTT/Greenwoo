@@ -354,10 +354,15 @@
         <div class="section">
             <h2>封禁管理</h2>
             
-            <!-- 封禁 -->
+            <!-- 第一行：用户名 + 封禁时长 -->
             <div class="input-group">
                 <input type="text" id="banUserId" placeholder="用户名">
                 <input type="text" id="banTime" placeholder="时长(分钟) 或 true(永久)">
+            </div>
+            
+            <!-- 第二行：封禁理由 + 封禁按钮 -->
+            <div class="input-group">
+                <input type="text" id="banReason" placeholder="封禁理由（非必要）">
                 <button id="banUser" style="background-color: var(--danger-color);">封禁</button>
             </div>
             
@@ -520,7 +525,10 @@
                             const banInfo = document.createElement('div');
                             banInfo.className = 'list-item';
                             banInfo.style.backgroundColor = '#fee2e2';
-                            banInfo.innerHTML = `<span class="badge badge-danger">永久封禁</span>`;
+                            
+                            // 显示封禁理由
+                            const reasonText = data.banreason ? ` - ${data.banreason}` : '';
+                            banInfo.innerHTML = `<span class="badge badge-danger">永久封禁${reasonText}</span>`;
                             displayEl.appendChild(banInfo);
                         } else {
                             // 临时封禁，检查是否过期
@@ -539,7 +547,10 @@
                                 const banInfo = document.createElement('div');
                                 banInfo.className = 'list-item';
                                 banInfo.style.backgroundColor = '#fee2e2';
-                                banInfo.innerHTML = `<span class="badge badge-danger">封禁中 (至 ${data.bantime.replace('T', ' ').split('+')[0]})</span>`;
+                                
+                                // 显示封禁理由
+                                const reasonText = data.banreason ? ` - ${data.banreason}` : '';
+                                banInfo.innerHTML = `<span class="badge badge-danger">封禁中 (至 ${data.bantime.replace('T', ' ').split('+')[0]})${reasonText}</span>`;
                                 displayEl.appendChild(banInfo);
                             }
                         }
@@ -583,10 +594,11 @@
             }
         });
 
-        // 封禁用户
+        // 【修改】封禁用户 - 支持封禁理由
         document.getElementById('banUser').addEventListener('click', async function() {
             const userId = document.getElementById('banUserId').value.trim();
             const time = document.getElementById('banTime').value.trim();
+            const reason = document.getElementById('banReason').value.trim(); // 获取封禁理由
             
             if (!userId || !time) {
                 showMessage('banMessage', '请填写用户名和封禁时长', true);
@@ -594,14 +606,27 @@
             }
 
             try {
+                // 封禁用户（存储 bantime）
                 const url = `${API_BASE_URL}/ban?id=${encodeURIComponent(userId)}&time=${encodeURIComponent(time)}&apikey=${encodeURIComponent(API_KEY)}`;
                 const response = await fetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
+                    // 如果填写了封禁理由，单独存储
+                    if (reason) {
+                        const reasonUrl = `${API_BASE_URL}/manage-user?id=${encodeURIComponent(userId)}&key=banreason&set=${encodeURIComponent(reason)}&apikey=${encodeURIComponent(API_KEY)}`;
+                        const reasonResponse = await fetch(reasonUrl);
+                        const reasonResult = await reasonResponse.json();
+                        
+                        if (!reasonResult.success) {
+                            console.warn('封禁成功，但保存理由失败:', reasonResult.error);
+                        }
+                    }
+                    
                     showMessage('banMessage', `用户 ${userId} 已封禁`);
                     document.getElementById('banUserId').value = '';
                     document.getElementById('banTime').value = '';
+                    document.getElementById('banReason').value = ''; // 清空理由输入框
                 } else {
                     showMessage('banMessage', result.error || '封禁失败', true);
                 }
