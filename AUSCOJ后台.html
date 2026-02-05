@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员后台</title>
+    <style>
+        /* ==================== 全局变量与重置 ==================== */
+        :root {
+            --primary-color: #3b82f6; /* 现代蓝 */
+            --primary-hover: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --text-main: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* ==================== 顶部状态栏 (Sticky 固定) ==================== */
+        .status-bar {
+            position: sticky;
+            top: -20px; /* 抵消body的padding，贴顶 */
+            z-index: 100;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px); /* 毛玻璃效果 */
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            margin: -20px -20px 20px -20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status-content {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #d1d5db;
+            margin-right: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .status-dot.online {
+            background-color: var(--success-color);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+
+        .status-dot.offline {
+            background-color: var(--danger-color);
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+        }
+
+        .api-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: #f9fafb;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            font-family: Consolas, Monaco, "Andale Mono", monospace;
+        }
+
+        /* ==================== 主容器样式 ==================== */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Admin 页面容器更宽 */
+        .container.admin {
+            max-width: 1000px;
+            padding: 30px;
+        }
+
+        /* ==================== 标题 ==================== */
+        h1, h2 {
+            margin-top: 0;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        h1 { font-size: 24px; margin-bottom: 25px; }
+        h2 { font-size: 18px; margin-bottom: 15px; border-left: 4px solid var(--primary-color); padding-left: 10px; }
+
+        /* ==================== 表单元素 ==================== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background-color: #f9fafb;
+            color: var(--text-main);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* ==================== 按钮样式 ==================== */
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.block {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        /* 次级按钮样式（用于折叠功能） */
+        button.secondary {
+            background-color: #fff;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        button.secondary:hover {
+            background-color: #f9fafb;
+            color: var(--text-main);
+            border-color: #d1d5db;
+        }
+
+        /* ==================== 消息提示 ==================== */
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.show { display: block; }
+
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* ==================== Admin 面板特定样式 ==================== */
+        .section {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        /* 列表组 (数据表格风格) */
+        .list-group {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden; /* 确保子元素圆角不溢出 */
+            background: #fff;
+            margin-bottom: 10px;
+        }
+
+        .list-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            transition: background-color 0.1s;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item:hover {
+            background-color: #f9fafb;
+        }
+
+        /* 隐藏列表项 */
+        .list-item.hidden {
+            display: none;
+        }
+
+        /* 徽章样式 */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 9999px; /* 全圆角 */
+            letter-spacing: 0.025em;
+        }
+
+        .badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .container { padding: 20px; }
+            .status-bar { margin: -10px -10px 20px -10px; top: -10px; }
+            .input-group { flex-direction: column; gap: 10px; }
+            .input-group button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部状态栏 -->
+    <div class="status-bar">
+        <div class="status-content">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">检查中...</span>
+        </div>
+        <div class="api-info" id="apiInfo">auoj.admin</div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container admin">
+        <h1>管理员后台</h1>
+
+        <!-- 邀请码管理区域 -->
+        <div class="section">
+            <h2>邀请码管理</h2>
+            <div class="form-group">
+                <button id="refreshInviteCodes" class="block">刷新邀请码列表</button>
+            </div>
+            <div id="inviteCodesList" class="list-group"></div>
+            <!-- 折叠控制按钮 -->
+            <button id="toggleInviteCodes" class="block secondary" style="display: none; font-size: 14px; padding: 8px;">展开更多</button>
+            <div id="inviteCodesMessage" class="message"></div>
+        </div>
+
+        <!-- 用户管理区域 -->
+        <div class="section">
+            <h2>用户管理</h2>
+            <div class="input-group">
+                <input type="text" id="manageUserId" placeholder="用户名">
+                <button id="searchUser">查看</button>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="manageUserKey" placeholder="要修改的键值 (如: beans)">
+                <input type="text" id="manageUserSetValue" placeholder="新值">
+                <button id="updateUser">修改</button>
+            </div>
+            
+            <div id="userInfoDisplay" class="list-group" style="display: none;"></div>
+            <div id="userMessage" class="message"></div>
+        </div>
+
+        <!-- 封禁管理区域 -->
+        <div class="section">
+            <h2>封禁管理</h2>
+            
+            <!-- 封禁 -->
+            <div class="input-group">
+                <input type="text" id="banUserId" placeholder="用户名">
+                <input type="text" id="banTime" placeholder="时长(分钟) 或 true(永久)">
+                <button id="banUser" style="background-color: var(--danger-color);">封禁</button>
+            </div>
+            
+            <!-- 解封 -->
+            <div class="input-group">
+                <input type="text" id="allowUserId" placeholder="用户名">
+                <button id="allowUser" style="background-color: var(--success-color);">解封</button>
+            </div>
+            
+            <div id="banMessage" class="message"></div>
+        </div>
+    </div>
+
+    <script>
+        // API配置
+        const API_BASE_URL = 'https://auoj.mvmzf.cn:800/';
+        const API_KEY = 'A3JbHEUn&F:MSuB@3sRc-xKuCw4xpDZEyrTddzwhsBHRA7Xm(ra86spsU=zV';
+
+        // DOM元素
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const apiInfo = document.getElementById('apiInfo');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAPIStatus();
+            loadInviteCodes();
+        });
+
+        // 检查API状态
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    statusDot.className = 'status-dot online';
+                    statusText.textContent = '在线';
+                    apiInfo.textContent = 'API连接正常';
+                } else {
+                    throw new Error('API异常');
+                }
+            } catch (error) {
+                statusDot.className = 'status-dot offline';
+                statusText.textContent = '离线';
+                apiInfo.textContent = 'API连接失败';
+            }
+        }
+
+        // 显示消息
+        function showMessage(elementId, message, isError = false) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.textContent = message;
+            messageEl.className = 'message show ' + (isError ? 'error' : 'success');
+            setTimeout(() => {
+                messageEl.className = 'message';
+            }, 3000);
+        }
+
+        // 邀请码管理 - 折叠/展开切换
+        document.getElementById('toggleInviteCodes').addEventListener('click', function() {
+            const hiddenItems = document.querySelectorAll('#inviteCodesList .list-item.hidden');
+            const isExpanded = this.textContent === '收起';
+            
+            if (isExpanded) {
+                // 收起逻辑：隐藏第6个及之后的所有项
+                const allItems = document.querySelectorAll('#inviteCodesList .list-item');
+                allItems.forEach((item, index) => {
+                    if (index >= 5) {
+                        item.classList.add('hidden');
+                    }
+                });
+                this.textContent = '展开更多';
+            } else {
+                // 展开逻辑：显示所有隐藏项
+                hiddenItems.forEach(item => item.classList.remove('hidden'));
+                this.textContent = '收起';
+            }
+        });
+
+        // 邀请码管理 - 刷新列表
+        document.getElementById('refreshInviteCodes').addEventListener('click', loadInviteCodes);
+
+        async function loadInviteCodes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/see-invite-code?apikey=${encodeURIComponent(API_KEY)}`);
+                const result = await response.json();
+                
+                const listEl = document.getElementById('inviteCodesList');
+                const toggleBtn = document.getElementById('toggleInviteCodes');
+                listEl.innerHTML = '';
+                toggleBtn.style.display = 'none'; // 默认隐藏折叠按钮
+                
+                if (result.success && result.codes && result.codes.length > 0) {
+                    const limit = 5; // 默认显示前5个
+                    const showCollapseBtn = result.codes.length > limit;
+
+                    result.codes.forEach((code, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'list-item';
+                        // 如果超过限制，添加 hidden 类
+                        if (index >= limit) {
+                            item.classList.add('hidden');
+                        }
+                        
+                        item.innerHTML = `
+                            <span>${code}</span>
+                            <span class="badge badge-success">可用</span>
+                        `;
+                        listEl.appendChild(item);
+                    });
+
+                    // 如果数量超过限制，显示折叠按钮
+                    if (showCollapseBtn) {
+                        toggleBtn.style.display = 'block';
+                        toggleBtn.textContent = '展开更多';
+                    }
+                    
+                    showMessage('inviteCodesMessage', `共 ${result.codes.length} 个邀请码`);
+                } else {
+                    listEl.innerHTML = '<div class="list-item"><span>暂无邀请码</span></div>';
+                    showMessage('inviteCodesMessage', '暂无邀请码', true);
+                }
+            } catch (error) {
+                showMessage('inviteCodesMessage', '加载失败: ' + error.message, true);
+            }
+        }
+
+        // 用户管理 - 查看用户
+        document.getElementById('searchUser').addEventListener('click', async function() {
+            const userId = document.getElementById('manageUserId').value.trim();
+            if (!userId) {
+                showMessage('userMessage', '请输入用户名', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/manage-user?id=${encodeURIComponent(userId)}&apikey=${encodeURIComponent(API_KEY)}`);
+                const result = await response.json();
+                
+                const displayEl = document.getElementById('userInfoDisplay');
+                displayEl.innerHTML = '';
+                
+                if (result.success && result.data) {
+                    displayEl.style.display = 'block';
+                    const data = result.data;
+                    
+                    for (const [key, value] of Object.entries(data)) {
+                        const item = document.createElement('div');
+                        item.className = 'list-item';
+                        item.innerHTML = `
+                            <span><strong>${key}:</strong> ${value}</span>
+                            <button onclick="copyToClipboard('${key}', '${value}')" style="padding: 4px 8px; font-size: 12px;">复制</button>
+                        `;
+                        displayEl.appendChild(item);
+                    }
+                    
+                    // 显示封禁状态
+                    if (data.ban === true || data.ban === 'true') {
+                        const banInfo = document.createElement('div');
+                        banInfo.className = 'list-item';
+                        banInfo.style.backgroundColor = '#fee2e2';
+                        banInfo.innerHTML = `<span class="badge badge-danger">已封禁</span>`;
+                        displayEl.appendChild(banInfo);
+                    }
+                    
+                    showMessage('userMessage', '用户信息加载成功');
+                } else {
+                    displayEl.style.display = 'none';
+                    showMessage('userMessage', result.error || '用户不存在', true);
+                }
+            } catch (error) {
+                showMessage('userMessage', '查询失败: ' + error.message, true);
+            }
+        });
+
+        // 用户管理 - 修改用户数据
+        document.getElementById('updateUser').addEventListener('click', async function() {
+            const userId = document.getElementById('manageUserId').value.trim();
+            const key = document.getElementById('manageUserKey').value.trim();
+            const value = document.getElementById('manageUserSetValue').value.trim();
+            
+            if (!userId || !key || !value) {
+                showMessage('userMessage', '请填写完整的用户名、键值和新值', true);
+                return;
+            }
+
+            try {
+                const url = `${API_BASE_URL}/manage-user?id=${encodeURIComponent(userId)}&key=${encodeURIComponent(key)}&set=${encodeURIComponent(value)}&apikey=${encodeURIComponent(API_KEY)}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('userMessage', '修改成功: ' + key + ' = ' + value);
+                    // 重新查询用户信息
+                    document.getElementById('searchUser').click();
+                } else {
+                    showMessage('userMessage', result.error || '修改失败', true);
+                }
+            } catch (error) {
+                showMessage('userMessage', '修改失败: ' + error.message, true);
+            }
+        });
+
+        // 封禁用户
+        document.getElementById('banUser').addEventListener('click', async function() {
+            const userId = document.getElementById('banUserId').value.trim();
+            const time = document.getElementById('banTime').value.trim();
+            
+            if (!userId || !time) {
+                showMessage('banMessage', '请填写用户名和封禁时长', true);
+                return;
+            }
+
+            try {
+                const url = `${API_BASE_URL}/ban?id=${encodeURIComponent(userId)}&time=${encodeURIComponent(time)}&apikey=${encodeURIComponent(API_KEY)}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('banMessage', `用户 ${userId} 已封禁`);
+                    document.getElementById('banUserId').value = '';
+                    document.getElementById('banTime').value = '';
+                } else {
+                    showMessage('banMessage', result.error || '封禁失败', true);
+                }
+            } catch (error) {
+                showMessage('banMessage', '封禁失败: ' + error.message, true);
+            }
+        });
+
+        // 解封用户
+        document.getElementById('allowUser').addEventListener('click', async function() {
+            const userId = document.getElementById('allowUserId').value.trim();
+            
+            if (!userId) {
+                showMessage('banMessage', '请填写用户名', true);
+                return;
+            }
+
+            try {
+                const url = `${API_BASE_URL}/allow?id=${encodeURIComponent(userId)}&apikey=${encodeURIComponent(API_KEY)}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('banMessage', `用户 ${userId} 已解封`);
+                    document.getElementById('allowUserId').value = '';
+                } else {
+                    showMessage('banMessage', result.error || '解封失败', true);
+                }
+            } catch (error) {
+                showMessage('banMessage', '解封失败: ' + error.message, true);
+            }
+        });
+
+        // 复制到剪贴板
+        function copyToClipboard(key, value) {
+            navigator.clipboard.writeText(`${key}: ${value}`).then(() => {
+                alert('已复制: ' + key + ' = ' + value);
+            });
+        }
+    </script>
+</body>
+</html>

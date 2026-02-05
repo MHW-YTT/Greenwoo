@@ -1,0 +1,29 @@
+[0;34m[1Panel 2026-02-05 01:18:04 install Log]: ======================= 开始安装 ======================= [0m
+[0;34m[1Panel 2026-02-05 01:18:13 install Log]: 您选择的安装路径是 /panel [0m
+[0;32m[1Panel 2026-02-05 01:18:13 install Log]: Docker 服务已成功重启。 [0m
+[0;34m[1Panel 2026-02-05 01:18:18 install Log]: 您设置的端口是:  11451 [0m
+[0;34m[1Panel 2026-02-05 01:18:34 install Log]: 您设置的面板安全入口是 codespace [0m
+[0;34m[1Panel 2026-02-05 01:18:40 install Log]: 您设置的面板用户是 code [0m
+[0;34m[1Panel 2026-02-05 01:18:40 install Log]: 设置 1Panel 面板密码，设置后按回车键继续 (默认是 ee2b3cfc53):  [0m
+[0;34m[1Panel 2026-02-05 01:18:48 install Log]: 正在配置 1Panel 服务 [0m
+
+"systemd" is not running in this container due to its overhead.
+Use the "service" command to start services instead. e.g.: 
+
+service --status-all
+[0;34m[1Panel 2026-02-05 01:18:48 install Log]: 正在启动 1Panel 服务 [0m
+
+"systemd" is not running in this container due to its overhead.
+Use the "service" command to start services instead. e.g.: 
+
+service --status-all
+
+"systemd" is not running in this container due to its overhead.
+Use the "service" command to start services instead. e.g.: 
+
+service --status-all
+[0;34m[1Panel 2026-02-05 01:18:48 install Log]: 服务启动失败，重试中... [0m
+[0;34m[1Panel 2026-02-05 01:18:50 install Log]: 服务启动失败，重试中... [0m
+[0;34m[1Panel 2026-02-05 01:18:52 install Log]: 服务启动失败，重试中... [0m
+[0;34m[1Panel 2026-02-05 01:18:54 install Log]: 服务启动失败，重试中... [0m
+[0;34m[1Panel 2026-02-05 01:18:56 install Log]: 启动 1Panel 服务时出错！ [0m
