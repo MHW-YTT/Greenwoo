@@ -513,13 +513,36 @@
                         displayEl.appendChild(item);
                     }
                     
-                    // 显示封禁状态
+                    // 【修改】显示封禁状态，并检查时间是否已过期
                     if (data.ban === true || data.ban === 'true') {
-                        const banInfo = document.createElement('div');
-                        banInfo.className = 'list-item';
-                        banInfo.style.backgroundColor = '#fee2e2';
-                        banInfo.innerHTML = `<span class="badge badge-danger">已封禁</span>`;
-                        displayEl.appendChild(banInfo);
+                        if (data.bantime === true || data.bantime === 'true') {
+                            // 永久封禁
+                            const banInfo = document.createElement('div');
+                            banInfo.className = 'list-item';
+                            banInfo.style.backgroundColor = '#fee2e2';
+                            banInfo.innerHTML = `<span class="badge badge-danger">永久封禁</span>`;
+                            displayEl.appendChild(banInfo);
+                        } else {
+                            // 临时封禁，检查是否过期
+                            const banDate = new Date(data.bantime);
+                            const now = new Date();
+                            
+                            if (now > banDate) {
+                                // 时间已过，显示解封提示
+                                const banInfo = document.createElement('div');
+                                banInfo.className = 'list-item';
+                                banInfo.style.backgroundColor = '#d1fae5'; // 绿色背景表示已解封
+                                banInfo.innerHTML = `<span class="badge badge-success">该用户已于 ${data.bantime.replace('T', ' ').split('+')[0]} 解封</span>`;
+                                displayEl.appendChild(banInfo);
+                            } else {
+                                // 仍在封禁中
+                                const banInfo = document.createElement('div');
+                                banInfo.className = 'list-item';
+                                banInfo.style.backgroundColor = '#fee2e2';
+                                banInfo.innerHTML = `<span class="badge badge-danger">封禁中 (至 ${data.bantime.replace('T', ' ').split('+')[0]})</span>`;
+                                displayEl.appendChild(banInfo);
+                            }
+                        }
                     }
                     
                     showMessage('userMessage', '用户信息加载成功');
@@ -621,4 +644,3 @@
     </script>
 </body>
 </html>
-
