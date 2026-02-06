@@ -38,9 +38,9 @@
             position: sticky;
             top: -20px; /* 抵消body的padding，贴顶 */
             z-index: 100;
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(255,255,255,0.95);
             backdrop-filter: blur(5px); /* 毛玻璃效果 */
-            border-bottom: 1px solid var(--border-color);
+            border-bottom:1px solid var(--border-color);
             padding: 12px 20px;
             margin: -20px -20px 20px -20px;
             display: flex;
@@ -404,7 +404,8 @@
     <script>
         // API配置
         const API_BASE_URL = 'https://auoj.mvmzf.cn:800/';
-        const API_KEY = 'A3JbHEUn&F:MSuB@3sRc-xKuCw4xpDZEyrTddzwhsBHRA7Xm(ra86spsU=zV';
+        // 【修改】使用特殊管理员密钥（special-api-key）
+        const ADMIN_API_KEY = 'root123456';  // 对应后端的 special-api-key
 
         // 全局变量：存储当前选中的用户ID
         let currentEditingUserId = null;
@@ -425,9 +426,10 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/health`);
                 if (response.ok) {
+                    const data = await response.json();
                     statusDot.className = 'status-dot online';
                     statusText.textContent = '在线';
-                    apiInfo.textContent = 'API连接正常';
+                    apiInfo.textContent = `API在线 | ${data.json_file_count} 用户 | ${data.invite_codes_count} 邀请码`;
                 } else {
                     throw new Error('API异常');
                 }
@@ -469,7 +471,8 @@
 
         async function loadInviteCodes() {
             try {
-                const response = await fetch(`${API_BASE_URL}/see-invite-code?apikey=${encodeURIComponent(API_KEY)}`);
+                // 【修改】使用 apikey 参数传递管理员密钥
+                const response = await fetch(`${API_BASE_URL}/see-invite-code?apikey=${encodeURIComponent(ADMIN_API_KEY)}`);
                 const result = await response.json();
                 
                 const listEl = document.getElementById('inviteCodesList');
@@ -552,7 +555,8 @@
                 // 遍历查找匹配 inviteCode 的用户
                 for (const file of listData.files) {
                     try {
-                        const userRes = await fetch(`${API_BASE_URL}/manage-user?id=${file.id}&apikey=${encodeURIComponent(API_KEY)}`);
+                        // 【修改】使用 apikey 参数
+                        const userRes = await fetch(`${API_BASE_URL}/manage-user?id=${file.id}&apikey=${encodeURIComponent(ADMIN_API_KEY)}`);
                         const userData = await userRes.json();
                         
                         if (userData.success && userData.data) {
@@ -584,7 +588,8 @@
             document.getElementById('selectedUserNameDisplay').textContent = userId;
             
             try {
-                const response = await fetch(`${API_BASE_URL}/manage-user?id=${encodeURIComponent(userId)}&apikey=${encodeURIComponent(API_KEY)}`);
+                // 【修改】使用 apikey 参数
+                const response = await fetch(`${API_BASE_URL}/manage-user?id=${encodeURIComponent(userId)}&apikey=${encodeURIComponent(ADMIN_API_KEY)}`);
                 const result = await response.json();
                 
                 const displayEl = document.getElementById('userInfoDisplay');
@@ -618,7 +623,8 @@
             }
 
             try {
-                const url = `${API_BASE_URL}/manage-user?id=${encodeURIComponent(currentEditingUserId)}&key=${encodeURIComponent(key)}&set=${encodeURIComponent(value)}&apikey=${encodeURIComponent(API_KEY)}`;
+                // 【修改】使用 apikey 参数
+                const url = `${API_BASE_URL}/manage-user?id=${encodeURIComponent(currentEditingUserId)}&key=${encodeURIComponent(key)}&set=${encodeURIComponent(value)}&apikey=${encodeURIComponent(ADMIN_API_KEY)}`;
                 const response = await fetch(url);
                 const result = await response.json();
                 
@@ -646,15 +652,12 @@
             }
 
             try {
-                const url = `${API_BASE_URL}/ban?id=${encodeURIComponent(userId)}&time=${encodeURIComponent(time)}&apikey=${encodeURIComponent(API_KEY)}`;
+                // 【修改】使用 apikey 参数，并包含 reason 参数
+                const url = `${API_BASE_URL}/ban?id=${encodeURIComponent(userId)}&time=${encodeURIComponent(time)}&reason=${encodeURIComponent(reason)}&apikey=${encodeURIComponent(ADMIN_API_KEY)}`;
                 const response = await fetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
-                    if (reason) {
-                        const reasonUrl = `${API_BASE_URL}/manage-user?id=${encodeURIComponent(userId)}&key=banreason&set=${encodeURIComponent(reason)}&apikey=${encodeURIComponent(API_KEY)}`;
-                        await fetch(reasonUrl);
-                    }
                     showMessage('banMessage', `用户 ${userId} 已封禁`);
                     document.getElementById('banUserId').value = '';
                     document.getElementById('banTime').value = '';
@@ -672,7 +675,8 @@
             if (!userId) return showMessage('banMessage', '请填写用户名', true);
 
             try {
-                const url = `${API_BASE_URL}/allow?id=${encodeURIComponent(userId)}&apikey=${encodeURIComponent(API_KEY)}`;
+                // 【修改】使用 apikey 参数
+                const url = `${API_BASE_URL}/allow?id=${encodeURIComponent(userId)}&apikey=${encodeURIComponent(ADMIN_API_KEY)}`;
                 const response = await fetch(url);
                 const result = await response.json();
                 
